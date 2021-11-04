@@ -13,17 +13,25 @@ output:
 
 ```{r setup, echo=FALSE}
 suppressPackageStartupMessages(library(fpp3))
+suppressPackageStartupMessages(library(patchwork))
+suppressPackageStartupMessages(library(kableExtra))
 ```
 
-# Getting started
+# 1. Getting started
 
-A time series is a sequence of observations collected at time intervals.
+A time series is a sequence of observations collected at time intervals. A time series object has a time component in it.
 
-# Time series graphics
+# 2. Time series graphics
 
 ## tsibble objects
 
-A time series object has a time component in it, called the **index**.
+A `tsibble` object, built on a tibble, has the following columns:
+
++ A column for the time component, called the **index**.
++ One or more columns for the values of the observations
++ Optional one or more columns for the characteristics of the subjects of the observations, together called the **key**
+
+Just like a database: **Each row (observation) must be uniquely identified by index and key.**
 
 ### The index variable {-}
 
@@ -81,12 +89,106 @@ y <- x %>%
 y
 ```
 
-**ts data**
+**half-hourly data**
+
+```{r}
+vic_elec
+```
+
+**ts data > tsibble**
 
 ```{r}
 x <- astsa::globtempl # a ts object
 y <- as_tsibble(x)
 y
+```
+
+**data frame > tsibble>
+
+
+### The key variables {-}
+
+Example: the ansett dataset is a weekly tsibble with data of the passenger numbers on Ansett airline flights.
+
+```{r}
+ansett
+```
+
+This is a `7407x4` tsibble object, 7407 rows and 4 columns. The columns are
+
++ `Week`: The time component. This is the index.
++ `Passengers`: Total air passengers travelling with Ansett. The obervation value.
++ `Airports`: The airports that passengers are travelling between (both directions)
++ `Class`: The class of the ticket.
+
+The `[1W]` tells us that the time interval is 1 week.
+
+The `Key: Airports, Class [30]` tells us that the keys are `Airports` and `Class` and that there are 30 unique combinations of `Airports` and `Class`.
+
+```{r}
+ansett %>% distinct(Airports)
+```
+
+10 different values for the variable `Airports`.
+
+```{r}
+ansett %>% distinct(Class)
+```
+
+3 different values for the variable `Class`.
+
+So in fact there are 30 different time series.
+
+You can get one of these 30 time series using `filter()`
+
+```{r}
+ansett %>% 
+	filter(Airports == "ADL-PER" & Class == "Business") %>%
+	autoplot()
+```
+
+### Conversions {-}
+
+See
+
+**ts data > tsibble**
+
+```{r}
+x <- astsa::globtempl # a ts object
+y <- as_tsibble(x)
+y
+```
+
+**data frame > tsibble>**
+
+To coerce a data frame to tsibble, you need to declare key and index. See https://tsibble.tidyverts.org/
+
+# Data sets
+
+```{r echo=FALSE}
+ds <- function(p) {
+	vcdExtra::datasets(p) %>% 
+	select(-class) %>%
+	knitr::kable() %>% kable_styling()
+}
+```
+
+**fpp3 package**
+
+```{r echo=FALSE}
+ds("fpp3")
+```
+
+**tsibble**
+
+```{r echo=FALSE}
+ds("tsibble")
+```
+
+**tsibbledata**
+
+```{r echo=FALSE}
+ds("tsibbledata")
 ```
 
 
@@ -95,3 +197,6 @@ y
 + [Forecasting: Principles and Practice (3rd ed)](https://otexts.com/fpp3/)
 
 + [ETC3550Slides, Hyndman](https://github.com/robjhyndman/ETC3550Slides/tree/fable)
+
++ [tsibbledata reference](https://tsibbledata.tidyverts.org/reference/index.html)
+
